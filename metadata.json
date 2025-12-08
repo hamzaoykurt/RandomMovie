@@ -1,0 +1,5 @@
+{
+  "name": "RandomMovie",
+  "description": "A personal movie and TV show assistant that helps you decide what to watch next from your own watchlist exports.",
+  "requestFramePermissions": []
+}
