@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Film, Tv, Plus, Settings, RefreshCw,
-  AlertTriangle, Check, ExternalLink, Download, Sparkles
+  AlertTriangle, Check, ExternalLink, Sparkles
 } from 'lucide-react';
 
 import { MediaItem, Database, ViewState, ModalState, ToastMessage } from './types';
@@ -12,11 +12,6 @@ import { Modal } from './components/Modal';
 import { Welcome } from './components/Welcome';
 import { ActionButton } from './components/ActionButton';
 import { ResultView } from './components/ResultView';
-
-type InstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-};
 
 export default function App() {
   // --- STATE INITIALIZATION WITH LOCALSTORAGE ---
@@ -40,8 +35,6 @@ export default function App() {
   const [currentPick, setCurrentPick] = useState<MediaItem | null>(null);
   const [loadingPoster, setLoadingPoster] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
   
   // 3. Load API Key
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('tmdb_api_key') || "");
@@ -61,29 +54,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('moviebase_view', view);
   }, [view]);
-
-  useEffect(() => {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
-      Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
-    setIsInstalled(standalone);
-
-    const handleInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as InstallPromptEvent);
-    };
-    const handleInstalled = () => {
-      setIsInstalled(true);
-      setInstallPrompt(null);
-      showToast('RandomMovie uygulama olarak yüklendi.');
-    };
-
-    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
-    window.addEventListener('appinstalled', handleInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
-      window.removeEventListener('appinstalled', handleInstalled);
-    };
-  }, []);
 
   // Save API Key handled in handler, but good to ensure consistency
   const handleSaveApiKey = (key: string) => {
@@ -165,24 +135,6 @@ export default function App() {
     }));
     setModal(null);
     showToast('Listeden kaldırıldı, izlenenlere eklendi.');
-  };
-
-  const handleInstall = async () => {
-    if (installPrompt) {
-      await installPrompt.prompt();
-      const result = await installPrompt.userChoice;
-      setInstallPrompt(null);
-      if (result.outcome === 'dismissed') showToast('Kurulum iptal edildi.', 'error');
-      return;
-    }
-
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    showToast(
-      isIOS
-        ? 'Safari: Paylaş → Ana Ekrana Ekle'
-        : 'Tarayıcı menüsünden “Uygulamayı yükle”yi seç.',
-      'error'
-    );
   };
 
   const handleManualAdd = () => {
@@ -307,15 +259,6 @@ export default function App() {
             </div>
 
             <div className="mt-auto pt-6 flex flex-col items-center gap-3">
-               {!isInstalled && (
-                 <button
-                   onClick={() => void handleInstall()}
-                   className="install-button w-full min-h-12 flex items-center justify-center gap-3 px-5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
-                 >
-                   <Download size={17} />
-                   Uygulama olarak yükle
-                 </button>
-               )}
                <button 
                 onClick={() => fileInputRef.current?.click()} 
                 className="flex items-center gap-2 text-xs font-bold text-neutral-500 bg-neutral-900/50 px-4 py-2 rounded-full hover:text-white hover:bg-neutral-800 transition-colors border border-transparent hover:border-neutral-800"
