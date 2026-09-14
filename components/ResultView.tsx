@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Film, Loader2, Star, Search, Check, X, RefreshCw, Play } from 'lucide-react';
+import { Film, Loader2, Star, Search, Check, X, RefreshCw } from 'lucide-react';
 import { MediaItem } from '../types';
 import { TMDB_IMAGE_BASE } from '../services/tmdb';
 
@@ -52,9 +52,18 @@ export const ResultView: React.FC<ResultViewProps> = ({
     transition: 'none',
   } : {};
 
+  const watchNow = () => {
+    window.open(
+      `https://www.google.com/search?q=${encodeURIComponent(item.t + ' izle')}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+    onMarkWatched();
+  };
+
   return (
     <div 
-      className="relative w-full h-full bg-black overflow-hidden flex flex-col"
+      className="result-viewport relative w-full bg-black overflow-hidden flex flex-col"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -96,7 +105,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       </div>
 
       {/* --- TOP BAR --- */}
-      <div className="relative z-50 flex justify-between items-start p-6 safe-area-pt">
+      <div className="result-topbar relative z-50 flex justify-between items-start px-5 sm:px-6 pb-5">
         <div className="flex flex-col">
           <span className="text-[10px] font-black tracking-[0.3em] uppercase text-white/60 mb-1">
             RandomMovie
@@ -130,7 +139,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       )}
 
       {/* --- CONTENT LAYER --- */}
-      <div className="relative z-40 mt-auto p-6 pb-10 w-full max-w-2xl mx-auto animate-slide-up safe-area-pb">
+      <div className="result-content relative z-40 mt-auto px-5 sm:px-6 pt-6 w-full max-w-2xl mx-auto animate-slide-up">
         
         {/* Title & Year */}
         <div className="mb-8 text-shadow-lg">
@@ -144,16 +153,14 @@ export const ResultView: React.FC<ResultViewProps> = ({
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <a 
-            href={`https://www.google.com/search?q=${encodeURIComponent(item.t + " izle")}`} 
-            target="_blank" 
-            rel="noreferrer"
+          <button
+            onClick={watchNow}
             className="group relative flex items-center justify-center gap-3 py-4 bg-white text-black rounded-2xl font-bold overflow-hidden shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <Search size={20} className="group-hover:scale-110 transition-transform" />
             <span>İzle</span>
-          </a>
+          </button>
           
           <button 
             onClick={onMarkWatched}

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Film, Tv, Plus, Settings, Play, RefreshCw, 
-  AlertTriangle, Check, ExternalLink 
+  Film, Tv, Plus, Settings, RefreshCw,
+  AlertTriangle, Check, ExternalLink, Download, Sparkles
 } from 'lucide-react';
 
 import { MediaItem, Database, ViewState, ModalState, ToastMessage } from './types';
@@ -12,6 +12,11 @@ import { Modal } from './components/Modal';
 import { Welcome } from './components/Welcome';
 import { ActionButton } from './components/ActionButton';
 import { ResultView } from './components/ResultView';
+
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+};
 
 export default function App() {
   // --- STATE INITIALIZATION WITH LOCALSTORAGE ---
@@ -35,6 +40,8 @@ export default function App() {
   const [currentPick, setCurrentPick] = useState<MediaItem | null>(null);
   const [loadingPoster, setLoadingPoster] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   
   // 3. Load API Key
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('tmdb_api_key') || "");
@@ -54,6 +61,29 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('moviebase_view', view);
   }, [view]);
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+    setIsInstalled(standalone);
+
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    };
+    const handleInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+      showToast('RandomMovie uygulama olarak yüklendi.');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('appinstalled', handleInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
+  }, []);
 
   // Save API Key handled in handler, but good to ensure consistency
   const handleSaveApiKey = (key: string) => {
@@ -134,7 +164,25 @@ export default function App() {
       watched: [...prev.watched, currentPick]
     }));
     setModal(null);
-    showToast('İzlenenlere eklendi.');
+    showToast('Listeden kaldırıldı, izlenenlere eklendi.');
+  };
+
+  const handleInstall = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const result = await installPrompt.userChoice;
+      setInstallPrompt(null);
+      if (result.outcome === 'dismissed') showToast('Kurulum iptal edildi.', 'error');
+      return;
+    }
+
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    showToast(
+      isIOS
+        ? 'Safari: Paylaş → Ana Ekrana Ekle'
+        : 'Tarayıcı menüsünden “Uygulamayı yükle”yi seç.',
+      'error'
+    );
   };
 
   const handleManualAdd = () => {
@@ -160,21 +208,21 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen font-sans flex flex-col items-center">
+    <div className="app-viewport font-sans flex flex-col items-center">
       
       <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".csv,.json" className="hidden" />
 
-      <div className="w-full max-w-lg min-h-screen flex flex-col p-6 relative z-10">
+      <div className="w-full max-w-lg app-viewport flex flex-col px-5 sm:px-6 relative z-10 safe-shell">
         
         {/* Navbar */}
-        <div className="flex justify-between items-center py-6">
+        <div className="flex justify-between items-center py-5 sm:py-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-tr from-red-600 to-red-800 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/40 animate-pulse-slow">
-              <Play size={18} className="text-white fill-white ml-0.5" />
+            <div className="brand-mark w-11 h-11 rounded-[14px] flex items-center justify-center">
+              <img src="/icon-192.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <span className="font-black text-white tracking-tight text-xl block leading-none">RandomMovie</span>
-              <span className="text-[10px] font-bold text-neutral-500 tracking-[0.2em] uppercase">Pro Assistant</span>
+              <span className="text-[10px] font-bold text-neutral-500 tracking-[0.2em] uppercase">Akşamın seçimi</span>
             </div>
           </div>
           
@@ -209,19 +257,29 @@ export default function App() {
         )}
 
         {view === 'dashboard' && (
-          <div className="flex-1 flex flex-col gap-6 animate-slide-up pb-10">
+          <div className="flex-1 flex flex-col gap-6 animate-slide-up pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+            <div className="flex items-end justify-between gap-4 pt-2">
+              <div>
+                <div className="flex items-center gap-2 text-red-500 mb-2">
+                  <Sparkles size={14} />
+                  <span className="text-[10px] font-black tracking-[0.22em] uppercase">Kütüphanen hazır</span>
+                </div>
+                <h1 className="text-3xl font-black text-white tracking-[-0.04em] leading-none">Ne izliyoruz?</h1>
+              </div>
+              <span className="text-xs text-neutral-600 font-bold whitespace-nowrap">{db.movies.length + db.shows.length} seçenek</span>
+            </div>
             
             {/* Stats Row */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-neutral-900/40 border border-neutral-800/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-lg">
+              <div className="stat-card p-4 rounded-2xl text-center">
                 <span className="block text-2xl font-bold text-white">{db.movies.length}</span>
                 <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Film</span>
               </div>
-              <div className="bg-neutral-900/40 border border-neutral-800/60 backdrop-blur-sm p-4 rounded-2xl text-center shadow-lg">
+              <div className="stat-card p-4 rounded-2xl text-center">
                 <span className="block text-2xl font-bold text-white">{db.shows.length}</span>
                 <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Dizi</span>
               </div>
-              <div className="bg-neutral-900/40 border border-neutral-800/60 backdrop-blur-sm p-4 rounded-2xl text-center relative overflow-hidden shadow-lg group">
+              <div className="stat-card p-4 rounded-2xl text-center relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-1 h-full bg-green-500 group-hover:w-full group-hover:opacity-10 transition-all duration-500" />
                 <span className="block text-2xl font-bold text-white">{db.watched.length}</span>
                 <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">İzlendi</span>
@@ -248,7 +306,16 @@ export default function App() {
               />
             </div>
 
-            <div className="mt-auto pt-6 flex justify-center">
+            <div className="mt-auto pt-6 flex flex-col items-center gap-3">
+               {!isInstalled && (
+                 <button
+                   onClick={() => void handleInstall()}
+                   className="install-button w-full min-h-12 flex items-center justify-center gap-3 px-5 rounded-2xl text-sm font-bold transition-all active:scale-[0.98]"
+                 >
+                   <Download size={17} />
+                   Uygulama olarak yükle
+                 </button>
+               )}
                <button 
                 onClick={() => fileInputRef.current?.click()} 
                 className="flex items-center gap-2 text-xs font-bold text-neutral-500 bg-neutral-900/50 px-4 py-2 rounded-full hover:text-white hover:bg-neutral-800 transition-colors border border-transparent hover:border-neutral-800"
@@ -278,7 +345,7 @@ export default function App() {
       </Modal>
 
       <Modal isOpen={modal === 'settings'} onClose={() => setModal(null)}>
-        <div className="p-6">
+        <div className="p-6 safe-modal-bottom">
           <h3 className="text-lg font-bold text-white mb-6">Ayarlar</h3>
           <div className="space-y-6">
             <div>
@@ -311,7 +378,7 @@ export default function App() {
       </Modal>
 
       <Modal isOpen={modal === 'add'} onClose={() => setModal(null)}>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 safe-modal-bottom">
           <h3 className="text-lg font-bold text-white">Manuel Ekle</h3>
           <input 
             className="w-full bg-neutral-900 border border-neutral-800 p-4 rounded-xl text-white outline-none focus:border-red-600"
@@ -347,7 +414,7 @@ export default function App() {
 
       {/* TOAST */}
       {toast && (
-        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] bg-neutral-900 border border-neutral-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2`}>
+        <div className={`toast-position fixed left-1/2 -translate-x-1/2 z-[60] bg-neutral-900 border border-neutral-800 text-white px-5 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 max-w-[calc(100vw-2rem)]`}>
           {toast.type === 'error' ? <AlertTriangle size={16} className="text-red-500" /> : <Check size={16} className="text-green-500" />}
           <span className="text-sm font-bold">{toast.msg}</span>
         </div>

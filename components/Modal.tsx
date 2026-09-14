@@ -14,7 +14,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, variant
   const isImmersive = variant === 'immersive';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="modal-viewport fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-500 ${isImmersive ? 'bg-black' : ''}`}
@@ -26,8 +26,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, variant
         className={`
           relative w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
           ${isImmersive 
-            ? 'h-full w-full animate-in zoom-in-95 fade-in' 
-            : 'max-w-md mx-4 bg-[#121212] border border-neutral-800 rounded-3xl shadow-2xl p-0 animate-in slide-in-from-bottom-8 fade-in'
+            ? 'modal-immersive w-full animate-in zoom-in-95 fade-in'
+            : 'modal-sheet max-w-md mx-4 bg-[#121212] border border-neutral-800 rounded-3xl shadow-2xl p-0 animate-in slide-in-from-bottom-8 fade-in'
           }
         `}
       >
