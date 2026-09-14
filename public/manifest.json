@@ -6,27 +6,27 @@
   "lang": "tr",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
-  "background_color": "#080506",
-  "theme_color": "#080506",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "background_color": "#180507",
+  "theme_color": "#180507",
   "orientation": "portrait-primary",
   "categories": ["entertainment", "lifestyle"],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/icon-192-v2.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icon-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable-512.png",
+      "src": "/icon-maskable-512-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
