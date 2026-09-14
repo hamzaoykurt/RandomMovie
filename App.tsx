@@ -170,7 +170,7 @@ export default function App() {
         <div className="flex justify-between items-center py-5 sm:py-6">
           <div className="flex items-center gap-3">
             <div className="brand-mark w-11 h-11 rounded-[14px] flex items-center justify-center">
-              <img src="/icon-192-v3.png" alt="" className="w-full h-full object-cover" />
+              <img src="/icon-192-v10.png" alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <span className="font-black text-white tracking-tight text-xl block leading-none">RandomMovie</span>
