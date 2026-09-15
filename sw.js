@@ -1,13 +1,17 @@
-const CACHE_NAME = 'randommovie-v11';
+const CACHE_NAME = 'randommovie-v12';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/favicon-v10.png',
-  '/icon-192-v10.png',
-  '/icon-512-v10.png',
-  '/icon-maskable-512-v10.png',
-  '/apple-touch-icon-v10.png'
+  '/manifest-v11.json',
+  '/favicon-v11.png',
+  '/icon-96-v11.png',
+  '/icon-128-v11.png',
+  '/icon-144-v11.png',
+  '/icon-192-v11.png',
+  '/icon-256-v11.png',
+  '/icon-512-v11.png',
+  '/icon-maskable-512-v11.png',
+  '/apple-touch-icon-v11.png'
 ];
 
 self.addEventListener('install', event => {
